@@ -94,6 +94,7 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
+    "joe-build": "node ./scripts/rollup/joe-build.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
