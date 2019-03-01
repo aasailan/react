@@ -665,6 +665,7 @@ const moduleTypes = {
 // React
 const ISOMORPHIC = moduleTypes.ISOMORPHIC;
 const RENDERER = moduleTypes.RENDERER;
+
 Bundles.bundles = [
   /******* Isomorphic *******/
   {

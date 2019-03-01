@@ -9,7 +9,13 @@
 
 'use strict';
 
+
 const React = require('./src/React');
+
+// react源码构建测试
+debugger;
+console.log(React);
+console.log('react config success...')
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
