@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>react元素</title>
+</head>
+<body>
+	<div id="react-root"></div>
+  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/dist/react-dom.development.js"></script>
+  <script src="../script/babel-standalone@6.26.0.min.js"></script>
+  <script type="text/babel">
+    const element1 = <div className="element">I'm <span>element1</span></div>;
+    console.log(element1);
+
+    // 上面的jsx会被编译为下面的模式
+    // const element2 = React.createElement(
+    //   'div',
+    //   { // props
+    //     className: 'element'
+    //   },
+    //   // [ // 如果children是以数组的方式传入 createElement方法，则需要给children元素绑定key，不然会warming
+    //     "I'm ", // children1
+    //     React.createElement( // children2
+    //       'span',
+    //       null,
+    //       'element1'
+    //     )
+    //   // ]
+    // );
+    // console.log(element2);
+
+    let app;
+    // 自定义一个组件
+    class App extends React.Component {
+      render() {
+        // 证明组件内的props对象来源于react element对象的props属性
+        console.log(this.props === app.props);
+        const element = (
+          <div>
+            in App
+          </div>
+        )
+        // 输出App组件的React元素
+        console.log(element);
+        return element;
+      }
+    }
+
+    app = <App testProp="testProp"/>;
+    console.log(app);
+
+		ReactDOM.render(
+      app,
+			document.getElementById('react-root')
+		);
+	</script>
+</body>
+</html>

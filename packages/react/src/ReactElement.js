@@ -93,9 +93,10 @@ function defineRefPropWarningGetter(props, displayName) {
  * the class pattern, so do not use new to call it. Also, no instanceof check
  * will work. Instead test $$typeof field against Symbol.for('react.element') to check
  * if something is a React Element.
- *
- * @param {*} type
- * @param {*} key
+ * 工厂方法，用来创建一个新的react element对象。因为不是使用new + 构造函数来生成react element
+ * 所以无法使用instanceof关键字来判断react element，需要检测对象的$$typeof属性
+ * @param {*} type react element type
+ * @param {*} key 
  * @param {string|object} ref
  * @param {*} self A *temporary* helper to detect places where `this` is
  * different from the `owner` when React.createElement is called, so that we
@@ -103,14 +104,17 @@ function defineRefPropWarningGetter(props, displayName) {
  * functions, and as long as `this` and owner are the same, there will be no
  * change in behavior.
  * @param {*} source An annotation object (added by a transpiler or otherwise)
- * indicating filename, line number, and/or other information.
- * @param {*} owner
- * @param {*} props
+ * indicating filename, line number, and/or other information. 一个注释性的对象，通常由
+ * 编译器添加，包含了该element定义在哪个文件，多少行等等信息
+ * @param {*} owner 描述当前react元素属于哪个react组件对应的FiberNode（由哪个react组件创建）
+ * @param {*} props 
  * @internal
  */
 const ReactElement = function(type, key, ref, self, source, owner, props) {
+  // demo3: 定义最终的react element对象
   const element = {
     // This tag allows us to uniquely identify this as a React Element
+    // demo3: 添加react element标志属性
     $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
@@ -123,6 +127,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     _owner: owner,
   };
 
+  // demo3: 为element对象添加一些开发环境下的额外属性
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
@@ -168,10 +173,19 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
+/**
+ * @description 创建react element
+ * @export
+ * @param {*} type element type
+ * @param {*} config element config
+ * @param {*} children 
+ * @returns
+ */
 export function createElement(type, config, children) {
   let propName;
 
   // Reserved names are extracted
+  // demo3: react element对象中的props属性对象
   const props = {};
 
   let key = null;
@@ -180,6 +194,7 @@ export function createElement(type, config, children) {
   let source = null;
 
   if (config != null) {
+    // demo3: 保存config中ref、key、self、source等四个特殊属性
     if (hasValidRef(config)) {
       ref = config.ref;
     }
@@ -190,6 +205,7 @@ export function createElement(type, config, children) {
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
+    // demo3: 将config对象中除了ref、key、self、source等四个特殊属性之外的属性复制到props对象中
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
@@ -202,6 +218,8 @@ export function createElement(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
+  // demo3: 将createElement函数第二个及其以后的参数放入children数组，赋值到props对象
+  // react组件内接受到props对象包含children数组就是来自于此
   const childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
@@ -212,6 +230,7 @@ export function createElement(type, config, children) {
     }
     if (__DEV__) {
       if (Object.freeze) {
+        // demo3: 冻结children对象，所以在开发版本中无法在子组件内修改props.children属性对象
         Object.freeze(childArray);
       }
     }
@@ -219,6 +238,9 @@ export function createElement(type, config, children) {
   }
 
   // Resolve default props
+  // demo3: 如果type是一个react组件构造函数，可能会存在defaultProps静态属性
+  // 关于defaultProps静态属性可参见官方文档 https://zh-hans.reactjs.org/docs/typechecking-with-proptypes.html#default-prop-values
+  // 将defaultProps对象的属性复制到props对象
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
     for (propName in defaultProps) {
@@ -233,6 +255,8 @@ export function createElement(type, config, children) {
         typeof type === 'function'
           ? type.displayName || type.name || 'Unknown'
           : type;
+      // demo3: 对props对象定义key和ref属性绑定一个get函数，让开发者在试图通过props对象引用
+      // key和ref属性时输出一段警告
       if (key) {
         defineKeyPropWarningGetter(props, displayName);
       }
@@ -241,6 +265,8 @@ export function createElement(type, config, children) {
       }
     }
   }
+
+  // demo3: 调用ReactElement函数产生element
   return ReactElement(
     type,
     key,

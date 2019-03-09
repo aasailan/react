@@ -1,4 +1,5 @@
 /**
+ * demo3: 该文件定义了react内各种特殊变量，起到判断的作用
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the

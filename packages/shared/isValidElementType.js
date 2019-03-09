@@ -20,6 +20,12 @@ import {
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
+/**
+ * @description demo3: 对createElement的type参数进行校验，校验是否string、function 或者 是否是符合要求的object
+ * @export
+ * @param {mixed} type
+ * @returns
+ */
 export default function isValidElementType(type: mixed) {
   return (
     typeof type === 'string' ||

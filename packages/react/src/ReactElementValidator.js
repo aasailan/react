@@ -260,10 +260,12 @@ function validateFragmentProps(fragment) {
 }
 
 export function createElementWithValidation(type, props, children) {
+  // demo3：对type参数进行校验
   const validType = isValidElementType(type);
 
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
+  // demo3: 如果type校验非法，则进行警告输出
   if (!validType) {
     let info = '';
     if (
@@ -307,6 +309,7 @@ export function createElementWithValidation(type, props, children) {
     );
   }
 
+  // demo3: 调用createElement函数，产生element
   const element = createElement.apply(this, arguments);
 
   // The result can be nullish if a mock or a custom function is used.
@@ -321,6 +324,7 @@ export function createElementWithValidation(type, props, children) {
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
   if (validType) {
+    // demo3: 校验第二个参数以及后面的参数
     for (let i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], type);
     }
