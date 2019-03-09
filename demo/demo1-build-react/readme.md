@@ -4,7 +4,7 @@
 ## 自定义构建命令
 步骤1：在GitHub上fork一份[react官方仓库](https://github.com/facebook/react)，用来做react源码阅读仓库
 
-步骤2：把fork过来的仓库clone到自己本地，准备修改react的rollup打包文件。react源码使用rollup进行打包，从npm script入手开始查看和修改react的构建代码。   
+步骤2：把fork过来的仓库clone到自己本地，准备修改react的rollup打包文件（clone仓库后安装依赖使用yarn install，npm install会报错）。react源码使用rollup进行打包，从npm script入手开始查看和修改react的构建代码。   
 react仓库的package.json截图如下
 <img src="./imgs/packagejson.png" alt="react仓库package.json截图">
 可以发现react的构建命令为npm run build，其中主要通过运行./scripts/rollup/build.js文件进行构建。运行一次npm run build命令，发现编译出了各种版本的不同的bundle文件。截图如下：
