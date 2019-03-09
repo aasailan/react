@@ -24,5 +24,6 @@ git checkout study
 ## 仓库学习内容
 仓库学习内容参考demo文件夹下
 
-[**demo1**](https://github.com/aasailan/react/blob/study%2Fbuild/demo/demo1-build-react/readme.md)：如何阅读修改react源码  
-demo2：理解React.createElement，以及react元素
+**demo1**：[如何阅读修改react源码](https://github.com/aasailan/react/blob/study/demo/demo1-build-react/readme.md)   
+**demo2**：[react元素与react组件的区别与联系](https://github.com/aasailan/react/blob/study/demo/demo2-react%E5%85%83%E7%B4%A0%E4%B8%8Ereact%E7%BB%84%E4%BB%B6/readme.md)  
+**demo3**: [React.createElement源码解析](https://github.com/aasailan/react/blob/study/demo/demo3-createElement/readme.md)

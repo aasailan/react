@@ -16,7 +16,7 @@ props: react元素的prop对象。**当元素的type是一个React component 类
 ...children：react元素的子元素    
 
 ## 函数源码
-从 [react源码入口]()（packages/react/src/React.js）可以看到createElement函数的定义如下：根据编译环境，赋值的函数稍有不同
+从 [react源码入口](https://github.com/aasailan/react/blob/study/packages/react/src/React.js)（packages/react/src/React.js）可以看到createElement函数的定义如下：根据编译环境，赋值的函数稍有不同
 ```javascript
 const React = {
   
@@ -29,7 +29,7 @@ const React = {
   ...
 };
 ```
-我们选择createElementWithValidation函数进行查看。createElementWithValidation函数定义在 react/src/ReactElementValidator.js 文件中
+我们选择createElementWithValidation函数进行查看。createElementWithValidation函数定义在 [react/src/ReactElementValidator.js](https://github.com/aasailan/react/blob/study/packages/react/src/ReactElementValidator.js) 文件中
 ```javascript
 export function createElementWithValidation(type, props, children) {
   // demo3：对type参数进行校验
@@ -65,7 +65,7 @@ export function createElementWithValidation(type, props, children) {
 ```
 可以发现，createElementWithValidation只是对 createElement 函数的一层封装，增加了一个参数校验功能，功能的核心依靠createElement函数实现
 
-createElement函数定义在 react/src/ReactElement.js 文件中
+createElement函数定义在 [react/src/ReactElement.js](https://github.com/aasailan/react/blob/study/packages/react/src/ReactElement.js) 文件中
 ```javascript
 /**
  * @description 创建react element
@@ -179,7 +179,7 @@ export function createElement(type, config, children) {
 4. 最后调用ReactElement函数创建并返回react element对象
 
 
-ReactElement函数的定义在 react/src/ReactElement.js中。
+ReactElement函数的定义在 [react/src/ReactElement.js](https://github.com/aasailan/react/blob/study/packages/react/src/ReactElement.js)中。
 ```javascript
 /**
  * Factory method to create a new React element. This no longer adheres to
@@ -271,7 +271,7 @@ ReactElement函数主要做了两件事情
 
 其中根据element对象内的$$typeof属性引用的REACT_ELEMENT_TYPE变量可以判断一个对象是否属于react element。所以要进一步查看REACT_ELEMENT_TYPE变量。
 
-REACT_ELEMENT_TYPE定义在 ./packages/shared/ReactSymbols.js 中
+REACT_ELEMENT_TYPE定义在 [./packages/shared/ReactSymbols.js](https://github.com/aasailan/react/blob/study/packages/shared/ReactSymbols.js) 中
 ```javascript
 const hasSymbol = typeof Symbol === 'function' && Symbol.for;
 
