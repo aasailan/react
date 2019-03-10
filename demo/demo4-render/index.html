@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>react元素</title>
+</head>
+<body>
+	<div id="react-root"></div>
+  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/dist/react-dom.development.js"></script>
+  <script src="../script/babel-standalone@6.26.0.min.js"></script>
+  <script type="text/babel">
+
+    // 自定义一个组件
+    class App extends React.Component {
+      render() {
+        const element = (
+          <div>
+            in App
+          </div>
+        )
+        return element;
+      }
+    }
+
+    const root = document.getElementById('react-root');
+
+		ReactDOM.render(
+      <App testProp="testProp"/>,
+      root,
+      function () {
+        // 输出回调函数this指向
+        console.log(this);
+      }
+    );
+    // 输出container的_reactRootContainer属性
+    console.log(root._reactRootContainer);
+	</script>
+</body>
+</html>

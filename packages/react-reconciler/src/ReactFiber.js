@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * demo4: 该文件主要定义一些创建FiberNode对象的方法
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
@@ -212,6 +213,7 @@ if (__DEV__) {
   debugCounter = 1;
 }
 
+// demo4: FIberNode类定义
 function FiberNode(
   tag: WorkTag,
   pendingProps: mixed,
@@ -398,6 +400,7 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
+// 创建root fiberNode节点
 export function createHostRootFiber(isConcurrent: boolean): Fiber {
   let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext;
 

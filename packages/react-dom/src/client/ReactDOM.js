@@ -291,6 +291,7 @@ type Work = {
   _didCommit: boolean,
 };
 
+// demo4: ReactWork类定义
 function ReactWork() {
   this._callbacks = null;
   this._didCommit = false;
@@ -298,7 +299,9 @@ function ReactWork() {
   // list of Work objects.
   this._onCommit = this._onCommit.bind(this);
 }
+// demo4: 设置commit之后的回调函数
 ReactWork.prototype.then = function(onCommit: () => mixed): void {
+  // demo4: 如果已经commit，则直接回调函数，否则存入_callbacks数组
   if (this._didCommit) {
     onCommit();
     return;
@@ -309,6 +312,7 @@ ReactWork.prototype.then = function(onCommit: () => mixed): void {
   }
   callbacks.push(onCommit);
 };
+// 负责触发commit之后的回调函数
 ReactWork.prototype._onCommit = function(): void {
   if (this._didCommit) {
     return;
@@ -331,27 +335,42 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
+/**
+ * @description ReactRoot类构造函数，ReactRoot对象内部引用着fiberRoot对象
+ * @param {Container} container dom container
+ * @param {boolean} isConcurrent 是否需要并发
+ * @param {boolean} hydrate 是否需要hydrate操作
+ */
 function ReactRoot(
   container: Container,
   isConcurrent: boolean,
   hydrate: boolean,
 ) {
+  // demo4: 创建fiberRoot对象放置在_internalRoot属性
   const root = DOMRenderer.createContainer(container, isConcurrent, hydrate);
   this._internalRoot = root;
 }
+/**
+ * @description: demo4: ReactRoot对象渲染子树的入口
+ * @param children 需要被渲染的react根元素
+ * @param callback 渲染完后的回调函数
+ */
 ReactRoot.prototype.render = function(
   children: ReactNodeList,
   callback: ?() => mixed,
 ): Work {
+  // 获取fiberRoot对象
   const root = this._internalRoot;
   const work = new ReactWork();
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
+  // demo4: 设置回调函数
   if (callback !== null) {
     work.then(callback);
   }
+  // demo4: 将reactElement挂载到container上
   DOMRenderer.updateContainer(children, root, null, work._onCommit);
   return work;
 };
@@ -461,16 +480,24 @@ ReactGenericBatching.setBatchingImplementation(
 
 let warnedAboutHydrateAPI = false;
 
+/**
+ * @description 根据dom container创建ReactRoot对象
+ * @param {DOMContainer} container dom container
+ * @param {boolean} forceHydrate 是否采用Hydrate操作
+ * @returns {Root}
+ */
 function legacyCreateRootFromDOMContainer(
   container: DOMContainer,
   forceHydrate: boolean,
 ): Root {
+  // demo4: 判断是否需要 Hydrate 操作
   const shouldHydrate =
     forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
   // First clear any existing content.
   if (!shouldHydrate) {
     let warned = false;
     let rootSibling;
+    // demo3: 清除container的所有孩子节点
     while ((rootSibling = container.lastChild)) {
       if (__DEV__) {
         if (
@@ -502,10 +529,20 @@ function legacyCreateRootFromDOMContainer(
     }
   }
   // Legacy roots are not async by default.
+  // demo4: 调用new reactRoot生成ReactRoot对象，isConcurrent表示将并发设置为false
   const isConcurrent = false;
   return new ReactRoot(container, isConcurrent, shouldHydrate);
 }
 
+/**
+ * @description 将一整颗子树渲染进dom container
+ * @param {?React$Component<any, any>} parentComponent
+ * @param {ReactNodeList} children 需要挂载的react element
+ * @param {DOMContainer} container 被挂载的dom container
+ * @param {boolean} forceHydrate 设置为true，将客户端渲染与服务端渲染对比拟合
+ * @param {?Function} callback 渲染后回调
+ * @returns
+ */
 function legacyRenderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
@@ -514,6 +551,7 @@ function legacyRenderSubtreeIntoContainer(
   callback: ?Function,
 ) {
   // TODO: Ensure all entry points contain this check
+  // demo4: 检查container是否是dom元素，否则输出警告
   invariant(
     isValidContainer(container),
     'Target container is not a DOM element.',
@@ -525,20 +563,28 @@ function legacyRenderSubtreeIntoContainer(
 
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
+  // demo4: 如果container从来没有挂载过reactElement，则不会有_reactRootContainer属性
   let root: Root = (container._reactRootContainer: any);
+  // demo4: 根据是container是否有挂载过reactElement，选择不同渲染方式
   if (!root) {
-    // Initial mount
+    // Initial mount 
+    // demo4: 创建ReactRoot对象，赋值到container._reactRootContainer
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
       container,
       forceHydrate,
     );
+
+    // demo4: 封装callback参数
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
+        // demo4: 获取根组件实例，将回调函数的this指针绑定到根组件实例
         const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
         originalCallback.call(instance);
       };
     }
+
+    // demo4: 为什么初始化挂载不能是批量更新
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
       if (parentComponent != null) {
@@ -548,6 +594,7 @@ function legacyRenderSubtreeIntoContainer(
           callback,
         );
       } else {
+        // demo4: 首次挂载运行root.render 在这里完成整颗组件数渲染
         root.render(children, callback);
       }
     });
@@ -570,6 +617,8 @@ function legacyRenderSubtreeIntoContainer(
       root.render(children, callback);
     }
   }
+
+  // 返回根组件实例
   return DOMRenderer.getPublicRootInstance(root._internalRoot);
 }
 
@@ -586,6 +635,7 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
+// demo4: ReactDOM定义
 const ReactDOM: Object = {
   createPortal,
 
@@ -635,17 +685,26 @@ const ReactDOM: Object = {
     );
   },
 
+  /**
+   * @description 将指定react element对象挂载到dom
+   * @param {React$Element<any>} element 需要挂载的react element
+   * @param {DOMContainer} container 充当容器的dom元素
+   * @param {?Function} callback 回调函数
+   * @returns
+   */
   render(
     element: React$Element<any>,
     container: DOMContainer,
     callback: ?Function,
   ) {
+    // demo4: 核心函数legacyRenderSubtreeIntoContainer
+    // 从函数名可看出该函数会将react元素的一整颗子树都渲染进dom container
     return legacyRenderSubtreeIntoContainer(
       null,
-      element,
-      container,
-      false,
-      callback,
+      element, // app组件element
+      container, // dom container
+      false, // 不启用Hydrate
+      callback, // 回调函数
     );
   },
 

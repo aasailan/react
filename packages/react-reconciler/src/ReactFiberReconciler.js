@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * NOTE: demo4: 本文件所有导出的对象函数都会被当做DOMRenderer变量的属性
  */
 
 import type {Fiber} from './ReactFiber';
@@ -107,6 +108,14 @@ function getContextForSubtree(
   return parentContext;
 }
 
+/**
+ * @description 接受root fibernode对象、root reactElement对象，进行更新
+ * @param {Fiber} current root fibernode对象（fiberRoot引用的fiberNode）
+ * @param {ReactNodeList} element 被挂载的root react element
+ * @param {ExpirationTime} expirationTime 截止时间
+ * @param {?Function} callback 回调函数
+ * @returns
+ */
 function scheduleRootUpdate(
   current: Fiber,
   element: ReactNodeList,
@@ -131,11 +140,13 @@ function scheduleRootUpdate(
     }
   }
 
+  // 创建一个update对象
   const update = createUpdate(expirationTime);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
 
+  // 将回调函数设置在update对象上
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
     warningWithoutStack(
@@ -154,6 +165,16 @@ function scheduleRootUpdate(
   return expirationTime;
 }
 
+/**
+ * @description 在截止时间内更新container
+ * @export
+ * @param {ReactNodeList} element 需要被渲染的react element
+ * @param {OpaqueRoot} container FiberRoot对象
+ * @param {?React$Component<any, any>} parentComponent
+ * @param {ExpirationTime} expirationTime 截止时间
+ * @param {?Function} callback 回调函数
+ * @returns
+ */
 export function updateContainerAtExpirationTime(
   element: ReactNodeList,
   container: OpaqueRoot,
@@ -162,6 +183,7 @@ export function updateContainerAtExpirationTime(
   callback: ?Function,
 ) {
   // TODO: If this is a nested container, this won't be the root.
+  // 获取fiberRoot的fiberNode节点，fiber树的顶点
   const current = container.current;
 
   if (__DEV__) {
@@ -176,13 +198,15 @@ export function updateContainerAtExpirationTime(
     }
   }
 
-  const context = getContextForSubtree(parentComponent);
+  // TODO: 从输出结果来看，context是空对象，但是context起什么作用？？
+  const context = getContextForSubtree(parentComponent); // parentComponent 是null
   if (container.context === null) {
     container.context = context;
   } else {
     container.pendingContext = context;
   }
 
+  // demo4: 从root fibernode进行更新
   return scheduleRootUpdate(current, element, expirationTime, callback);
 }
 
@@ -272,18 +296,31 @@ export function createContainer(
   isConcurrent: boolean,
   hydrate: boolean,
 ): OpaqueRoot {
+  // 创建并返回FiberRoot对象
   return createFiberRoot(containerInfo, isConcurrent, hydrate);
 }
 
+/**
+ * @description demo4: 将reactElement挂载到dom container上
+ * @export
+ * @param {ReactNodeList} element 需要挂载的reactElement
+ * @param {OpaqueRoot} container FiberRoot对象
+ * @param {?React$Component<any, any>} parentComponent
+ * @param {?Function} callback 挂载后的回调函数
+ * @returns {ExpirationTime}
+ */
 export function updateContainer(
   element: ReactNodeList,
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  // FiberRoot对象内的FiberNode对象，fiber树的顶点
   const current = container.current;
+  // 计算fiber协调过程中需要用到时间
   const currentTime = requestCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, current);
+  // 在截止时间内更新container
   return updateContainerAtExpirationTime(
     element,
     container,

@@ -99,6 +99,7 @@ export type FiberRoot = {
   ...ProfilingOnlyFiberRootProperties,
 };
 
+// demo4: 创建一个FiberRoot对象
 export function createFiberRoot(
   containerInfo: any,
   isConcurrent: boolean,
@@ -106,12 +107,18 @@ export function createFiberRoot(
 ): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
+
+  // 创建一个FiberNode节点，注意命名，未初始化的FiberNode
+  // 这个FiberNode对象是整颗Fiber树的顶点
   const uninitializedFiber = createHostRootFiber(isConcurrent);
 
+  // demo4: 定义root对象作为fiberRoot节点返回
   let root;
   if (enableSchedulerTracing) {
+    // 定义FiberRoot对象
     root = ({
       current: uninitializedFiber,
+      // containerInfo引用的作为container的dom元素
       containerInfo: containerInfo,
       pendingChildren: null,
 
@@ -165,6 +172,7 @@ export function createFiberRoot(
     }: BaseFiberRootProperties);
   }
 
+  // FiberRoot引用的FiberNode对象的stateNode属性就是FiberRoot
   uninitializedFiber.stateNode = root;
 
   // The reason for the way the Flow types are structured in this file,

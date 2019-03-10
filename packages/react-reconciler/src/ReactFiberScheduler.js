@@ -1884,8 +1884,9 @@ let lowestPriorityPendingInteractiveExpirationTime: ExpirationTime = NoWork;
 let hasUnhandledError: boolean = false;
 let unhandledError: mixed | null = null;
 
-let isBatchingUpdates: boolean = false;
-let isUnbatchingUpdates: boolean = false;
+// demo4: 关键标志变量 TODO: 为什么要设置isBatchingUpdates和isUnbatchingUpdates两个变量来标志是批批量更新和非批量更新
+let isBatchingUpdates: boolean = false; // 是否正在批量更新
+let isUnbatchingUpdates: boolean = false; // 是否正在非批量更新
 let isBatchingInteractiveUpdates: boolean = false;
 
 let completedBatches: Array<Batch> | null = null;
@@ -2450,8 +2451,16 @@ function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
   }
 }
 
-// TODO: Batching should be implemented at the renderer level, not inside
-// the reconciler.
+/**
+ * // TODO: Batching should be implemented at the renderer level, not inside
+ * // the reconciler.
+ * @description 确保将isUnbatchingUpdates设置为true后，再运行回调函数
+ * @template A
+ * @template R
+ * @param {(a: A) => R} fn
+ * @param {A} a
+ * @returns {R}
+ */
 function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
   if (isBatchingUpdates && !isUnbatchingUpdates) {
     isUnbatchingUpdates = true;
