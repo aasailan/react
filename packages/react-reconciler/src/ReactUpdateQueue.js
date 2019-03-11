@@ -186,6 +186,12 @@ function cloneUpdateQueue<State>(
   return queue;
 }
 
+/**
+ * @description 创建一个update对象
+ * @export
+ * @param {ExpirationTime} expirationTime
+ * @returns {Update<*>}
+ */
 export function createUpdate(expirationTime: ExpirationTime): Update<*> {
   return {
     expirationTime: expirationTime,

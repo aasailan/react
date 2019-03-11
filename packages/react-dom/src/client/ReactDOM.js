@@ -291,7 +291,13 @@ type Work = {
   _didCommit: boolean,
 };
 
-// demo4: ReactWork类定义
+/**
+ * @description ReactWork类定义
+ * ReactWork对象内部维护一个_didCommit状态和callback队列
+ * 当_didCommit状态为false，通过原型方法 then来添加回调函数
+ * 调用原型方法_onCommit可以将_didCommit设置为true并逐一调用
+ * 回调函数
+ */
 function ReactWork() {
   this._callbacks = null;
   this._didCommit = false;

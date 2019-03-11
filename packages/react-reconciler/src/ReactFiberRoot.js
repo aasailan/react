@@ -112,6 +112,9 @@ export function createFiberRoot(
   // 这个FiberNode对象是整颗Fiber树的顶点
   const uninitializedFiber = createHostRootFiber(isConcurrent);
 
+  // demo4: 输出刚创建的FiberNode
+  console.log('uninitializedFiber', uninitializedFiber);
+
   // demo4: 定义root对象作为fiberRoot节点返回
   let root;
   if (enableSchedulerTracing) {

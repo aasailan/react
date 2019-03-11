@@ -320,13 +320,16 @@ export function updateContainer(
   // 计算fiber协调过程中需要用到时间
   const currentTime = requestCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, current);
+  // demo4: 输出计算出的当前时间和截止时间
+  console.log('currentTime', currentTime);
+  console.log('expirationTime', expirationTime);
   // 在截止时间内更新container
   return updateContainerAtExpirationTime(
-    element,
-    container,
-    parentComponent,
-    expirationTime,
-    callback,
+    element, // 需要挂载root reactElement
+    container, // FiberRoot对象
+    parentComponent, // null
+    expirationTime, // 截止时间
+    callback, // reactWork._onCommit
   );
 }
 

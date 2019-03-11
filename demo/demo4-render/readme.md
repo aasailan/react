@@ -204,7 +204,7 @@ function ReactRoot(
   this._internalRoot = root;
 }
 ```
-ReactRoot对象的作用主要有三个：
+**ReactRoot对象的作用主要有三个：**
 1. 被dom container的_reactRootContainer引用，用来判断dom container是否已经挂载过reactElement
 2. ReactRoot._internalRoot引用着**FiberRoot对象，FiberRoot对象是整个Fiber树的开端**。
 3. ReactRoot.render方法是整个react应用渲染的入口，下面会讲到
@@ -223,3 +223,304 @@ export function createContainer(
 ```
 
 ### createFiberRoot
+createFiberRoot定义在 [./packages/react-reconciler/src/ReactFiberRoot.js]()。
+createFiberRoot主要做了两件事
+1. 创建了一个FiberNode，这个FiberNode被FiberRoot对象引用，是**整个Fiber树的顶点**
+2. 创建并返回FiberRoot对象
+```javascript
+// 创建一个FiberRoot对象
+export function createFiberRoot(
+  containerInfo: any,
+  isConcurrent: boolean,
+  hydrate: boolean,
+): FiberRoot {
+  // 创建一个FiberNode节点，注意命名，未初始化的FiberNode
+  // 这个FiberNode对象是整颗Fiber树的顶点
+  const uninitializedFiber = createHostRootFiber(isConcurrent);
+
+  // demo4: 输出刚创建的FiberNode
+  console.log('uninitializedFiber', uninitializedFiber);
+
+  // demo4: 定义root对象作为fiberRoot节点返回
+  let root;
+  if (enableSchedulerTracing) {
+    // 定义FiberRoot对象
+    root = ({
+      // 当前FiberRoot对象引用的FiberNode节点
+      current: uninitializedFiber,
+      // containerInfo引用的作为container的dom元素
+      containerInfo: containerInfo,
+      pendingChildren: null,
+
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
+
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+
+      interactionThreadID: unstable_getThreadID(),
+      memoizedInteractions: new Set(),
+      pendingInteractionMap: new Map(),
+    }: FiberRoot);
+  } else {
+    root = ({
+      current: uninitializedFiber,
+      containerInfo: containerInfo,
+      pendingChildren: null,
+
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
+
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+    }: BaseFiberRootProperties);
+  }
+
+  // FiberRoot引用的FiberNode对象的stateNode属性就是FiberRoot
+  uninitializedFiber.stateNode = root;
+
+  return ((root: any): FiberRoot);
+}
+```
+将上述uninitializedFiber输出如下图：TODO: 输出FiberNode
+<img src="./imgs/uninitializedFiber.png" alt="uninitializedFiber变量输出">
+
+createHostRootFiber定义在 [./packages/react-reconciler/src/ReactFiber.js]()。这个文件定义了很多生成Fiber节点的方法，createHostRootFiber是其中一种，它通过调用createFiber方法生成了FiberNode。createFiber方法则调用FiberNode的构造函数。FiberNode类的定义如下：
+```javascript
+// demo4: FIberNode类定义
+function FiberNode(
+  tag: WorkTag,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+) {
+  // Instance
+  this.tag = tag;
+  this.key = key;
+  this.elementType = null;
+  this.type = null;
+  this.stateNode = null;
+
+  // Fiber
+  this.return = null;
+  this.child = null;
+  this.sibling = null;
+  this.index = 0;
+
+  this.ref = null;
+
+  this.pendingProps = pendingProps;
+  this.memoizedProps = null;
+  this.updateQueue = null;
+  this.memoizedState = null;
+  this.firstContextDependency = null;
+
+  this.mode = mode;
+
+  // Effects
+  this.effectTag = NoEffect;
+  this.nextEffect = null;
+
+  this.firstEffect = null;
+  this.lastEffect = null;
+
+  this.expirationTime = NoWork;
+  this.childExpirationTime = NoWork;
+
+  this.alternate = null;
+
+  if (enableProfilerTimer) {
+    this.actualDuration = 0;
+    this.actualStartTime = -1;
+    this.selfBaseDuration = 0;
+    this.treeBaseDuration = 0;
+  }
+
+  if (__DEV__) {
+    this._debugID = debugCounter++;
+    this._debugSource = null;
+    this._debugOwner = null;
+    this._debugIsCurrentlyTiming = false;
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(this);
+    }
+  }
+}
+```
+至此大致明白了**ReactRoot的创建过程**。对于其中关键对象的引用情况如下:
+<img src="./imgs/domcontainer_reactroot.png" alt="各个对象的引用情况">
+输出ReactRoot对象截图如下：
+<img src="./imgs/reactRoot_detail.png" alt="ReactRoot对象输出">
+
+明白了ReactRoot对象之后，回到legacyRenderSubtreeIntoContainer函数，探究root.render这句代码
+
+### ReactRoot.prototype.render 
+root.render实际上就是ReactRoot.prototype.render。
+该方法主要做了两件事
+1. 创建了**reactWork对象**，在reactWork对象上设置了回调函数
+2. 调用了DOMRenderer.updateContainer方法，进行渲染更新
+```javascript
+/**
+ * @description: demo4: ReactRoot对象渲染子树的入口
+ * @param children 需要被渲染的react根元素
+ * @param callback 渲染完后的回调函数
+ */
+ReactRoot.prototype.render = function(
+  children: ReactNodeList,
+  callback: ?() => mixed,
+): Work {
+  // 获取fiberRoot对象
+  const root = this._internalRoot;
+  const work = new ReactWork();
+  callback = callback === undefined ? null : callback;
+  // demo4: 设置回调函数
+  if (callback !== null) {
+    work.then(callback);
+  }
+  // demo4: 将reactElement挂载到container上
+  DOMRenderer.updateContainer(children, root, null, work._onCommit);
+  return work;
+};
+```
+ReactWork类定义在 [./packages/react-dom/src/client/ReactDOM.js](https://github.com/aasailan/react/blob/study/packages/react-dom/src/client/ReactDOM.js)中，作用如下，这里不再列出代码：    
+ReactWork对象内部维护一个_didCommit状态和callback队列，当_didCommit状态为false，通过原型方法 then来添加回调函数，调用原型方法_onCommit可以将_didCommit设置为true并逐一回调函数
+
+### updateContainer
+updateContainer方法定义在 [./packages/react-reconciler/src/ReactFiberReconciler.js](https://github.com/aasailan/react/blob/study/packages/react-reconciler/src/ReactFiberReconciler.js)    
+updateContainer方法计算了fiber协调过程需要的expirationTime，然后调用updateContainerAtExpirationTime方法进行渲染更新。
+```javascript
+/**
+ * @description demo4: 将reactElement挂载到dom container上
+ * @export
+ * @param {ReactNodeList} element 需要挂载的reactElement
+ * @param {OpaqueRoot} container FiberRoot对象
+ * @param {?React$Component<any, any>} parentComponent
+ * @param {?Function} callback 挂载后的回调函数
+ * @returns {ExpirationTime}
+ */
+export function updateContainer(
+  element: ReactNodeList,
+  container: OpaqueRoot,
+  parentComponent: ?React$Component<any, any>,
+  callback: ?Function,
+): ExpirationTime {
+  // FiberRoot对象内的FiberNode对象，fiber树的顶点
+  const current = container.current;
+  // 计算fiber协调过程中需要用到时间
+  const currentTime = requestCurrentTime();
+  const expirationTime = computeExpirationForFiber(currentTime, current);
+  // 在截止时间内更新container
+  return updateContainerAtExpirationTime(
+    element, // 需要挂载root reactElement
+    container, // FiberRoot对象
+    parentComponent, // null
+    expirationTime, // 截止时间
+    callback, // reactWork._onCommit
+  );
+}
+```
+currentTime、expirationTime输出如下所示：
+<img src="./imgs/expirationTime.png" alt="currentTime、expirationTime输出">
+这里先不管expirationTime起什么作用以及如何计算，先继续深入updateContainerAtExpirationTime方法    
+updateContainerAtExpirationTime方法为FiberRoot对象设置了context属性，然后调用了scheduleRootUpdate方法，传入了FiberRoot对象引用的FiberNode，在scheduleRootUpdate方法继续渲染操作
+```javascript
+/**
+ * @description 在截止时间内更新container
+ * @export
+ * @param {ReactNodeList} element 需要被渲染的react element
+ * @param {OpaqueRoot} container FiberRoot对象
+ * @param {?React$Component<any, any>} parentComponent
+ * @param {ExpirationTime} expirationTime 截止时间
+ * @param {?Function} callback 回调函数
+ * @returns
+ */
+export function updateContainerAtExpirationTime(
+  element: ReactNodeList,
+  container: OpaqueRoot,
+  parentComponent: ?React$Component<any, any>,
+  expirationTime: ExpirationTime,
+  callback: ?Function,
+) {
+  // 获取fiberRoot的fiberNode节点，fiber树的顶点
+  const current = container.current;
+  ...
+  return scheduleRootUpdate(current, element, expirationTime, callback);
+}
+```
+
+### scheduleRootUpdate
+scheduleRootUpdate定义在[./packages/react-reconciler/src/ReactFiberReconciler.js](https://github.com/aasailan/react/blob/study/packages/react-reconciler/src/ReactFiberReconciler.js)。  
+```javascript
+/**
+ * @description 接受root fibernode对象、root reactElement对象，进行更新
+ * @param {Fiber} current fibernode对象（fiberRoot引用的fiberNode）
+ * @param {ReactNodeList} element 被挂载的root reactElement
+ * @param {ExpirationTime} expirationTime 截止时间
+ * @param {?Function} callback 回调函数
+ * @returns
+ */
+function scheduleRootUpdate(
+  current: Fiber,
+  element: ReactNodeList,
+  expirationTime: ExpirationTime,
+  callback: ?Function,
+) {
+  // 创建一个update对象
+  const update = createUpdate(expirationTime);
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  update.payload = {element};
+
+  // 将回调函数设置在update对象上
+  callback && (update.callback = callback)
+
+  flushPassiveEffects();
+  enqueueUpdate(current, update);
+  scheduleWork(current, expirationTime);
+
+  return expirationTime;
+}
+```
+update对象的定义如下：
+```javascript
+update = {
+    expirationTime: expirationTime,
+
+    tag: UpdateState, // UpdateState变量被定义为0
+    payload: null,
+    callback: null,
+
+    next: null,
+    nextEffect: null,
+    payload: {
+      element: element // root reactElement
+    }
+  };
+```
+
